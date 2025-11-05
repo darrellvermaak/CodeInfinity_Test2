@@ -78,9 +78,7 @@ class CSVGenerator {
         await writable.close();
         return true;
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error(err);
-        }
+        if (err.name !== 'AbortError') console.error(err);
         return false;
       }
     }
@@ -90,41 +88,106 @@ class CSVGenerator {
 
 // DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('generateBtn');
+  const generateBtn = document.getElementById('generateBtn');
   const status = document.getElementById('status');
   const input = document.getElementById('generateQuantity');
+  const fileInput = document.getElementById('csv_file_to_upload');
+  const fileNameSpan = document.getElementById('fileName');
+  const uploadForm = document.getElementById('uploadForm');
+  const uploadStatus = document.getElementById('uploadStatus');
+  const uploadBtn = document.getElementById('uploadBtn');
   const generator = new CSVGenerator();
+
   let quantityToGenerate = 1000000;
 
-  input.addEventListener('input', () => {
-    quantityToGenerate = parseInt(input.value, 10);
-    if (isNaN(quantityToGenerate) || quantityToGenerate <= 0) {
-      btn.disabled = true;
-    } else {
-      btn.disabled = false;
-      btn.textContent = `Generate & Save ${quantityToGenerate.toLocaleString()} Rows`;
+  // Sync button text & validate input
+  const updateButton = () => {
+    let raw = input.value.trim();
+    let val = parseInt(raw, 10);
+
+    // ----  ENFORCE MAX 5,000,000  ----
+    if (isNaN(val) || val < 1) {
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Enter a number ≥ 1';
+      return;
     }
+
+    if (val > 5_000_000) {
+      // Auto-clamp and show a hint
+      val = 5_000_000;
+      input.value = val.toString();
+      status.textContent = 'Maximum allowed: 5,000,000 rows';
+      setTimeout(() => { status.textContent = ''; }, 3000);
+    }
+
+    quantityToGenerate = val;
+    generateBtn.disabled = false;
+    generateBtn.textContent = `Generate & Save ${val.toLocaleString()} Rows`;
+  };
+
+  input.addEventListener('input', updateButton);
+  updateButton(); // Initial
+
+  // File input display
+  fileInput.addEventListener('change', () => {
+    fileNameSpan.textContent = fileInput.files[0]?.name || 'Choose CSV file...';
   });
 
-  btn.addEventListener('click', async () => {
-    btn.disabled = true;
-    status.textContent = `Generating ${quantityToGenerate} rows... (please wait)`;
+  // Generate CSV
+  generateBtn.addEventListener('click', async () => {
+    generateBtn.disabled = true;
+    status.textContent = `Generating ${quantityToGenerate.toLocaleString()} rows...`;
     
-    // Run in background to keep UI responsive
     setTimeout(async () => {
       try {
         const csv = generator.generateCSV(quantityToGenerate);
         const saved = await generator.saveWithPicker(csv);
-        if (!saved) {
-          generator.downloadCSV(csv);
-        }
+        if (!saved) generator.downloadCSV(csv);
         status.textContent = saved ? 'File saved!' : 'Download started!';
       } catch (err) {
         status.textContent = 'Error generating file';
         console.error(err);
       } finally {
-        btn.disabled = false;
+        generateBtn.disabled = false;
       }
     }, 0);
+  });
+
+  // Upload CSV
+  uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!fileInput.files[0]) return;
+
+    uploadBtn.disabled = true;
+    uploadStatus.textContent = 'Uploading...';
+
+    const formData = new FormData();
+    formData.append('csv_file_to_upload', fileInput.files[0]);
+
+    try {
+      const res = await fetch('/submit', {
+        method: 'POST',
+        body: formData
+      });
+
+      const text = await res.text();
+      if (res.ok) {
+        uploadStatus.textContent = 'Upload successful!';
+        uploadStatus.style.color = '#27ae60';
+      } else {
+        uploadStatus.textContent = `Upload failed: ${text}`;
+        uploadStatus.style.color = '#e74c3c';
+      }
+    } catch (err) {
+      uploadStatus.textContent = 'Network error';
+      uploadStatus.style.color = '#e74c3c';
+      console.error(err);
+    } finally {
+      uploadBtn.disabled = false;
+      setTimeout(() => {
+        uploadStatus.textContent = '';
+        uploadStatus.style.color = '';
+      }, 5000);
+    }
   });
 });
