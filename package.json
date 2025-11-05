@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "CodeInfinity Test 2",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "build": "npx tsc",
     "startx": "node --loader ts-node/esm src/index.ts",
