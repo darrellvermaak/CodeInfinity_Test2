@@ -1,0 +1,36 @@
+{
+  "name": "test2",
+  "version": "1.0.0",
+  "description": "CodeInfinity Test 2",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tsc",
+    "startx": "node --loader ts-node/esm src/index.ts",
+    "test": "NODE_ENV=test dotenv -e .env.test -- vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/darrellvermaak/CodeInfinity_Test2.git"
+  },
+  "author": "Darrell Vermaak",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/darrellvermaak/CodeInfinity_Test2/issues"
+  },
+  "homepage": "https://github.com/darrellvermaak/CodeInfinity_Test2#readme",
+  "dependencies": {
+    "@types/node": "^24.10.0",
+    "mongodb": "^6.20.0",
+    "sqlite3": "^5.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/mongodb": "^4.0.6",
+    "@types/node": "^24.10.0",
+    "@types/supertest": "^6.0.3",
+    "dotenv-cli": "^11.0.0",
+    "supertest": "^7.1.4",
+    "vitest": "^4.0.7"
+  }
+}
