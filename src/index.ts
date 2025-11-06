@@ -10,4 +10,4 @@ import { CloudInfinityServer } from "./server/cloud-infinity-server.js";
 
 console.log("Hello, CodeInfinity Test 2!");
 
-CloudInfinityServer.StartServer();
+const cloudInfinityServer = new CloudInfinityServer().StartServer();
