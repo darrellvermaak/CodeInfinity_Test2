@@ -1,31 +1,27 @@
 import pkg from 'sqlite3';
 
 export class SQLiteDatabase {
-  private db: pkg.Database;
+  private db!: pkg.Database;
   private insertStmt?: pkg.Statement;
   private insertedCount = 0;
 
-  constructor() {
-    this.db = new pkg.Database('CodeInfinity_Test2.db', (err) => {
-      if (err) {
-        console.error('DB open error:', err);
-        throw err;
-      }
-      // MAX SPEED SETTINGS
-      this.db.exec(`
-        PRAGMA journal_mode = OFF;
-        PRAGMA synchronous = OFF;
-        PRAGMA cache_size = 1000000;
-        PRAGMA locking_mode = EXCLUSIVE;
-        PRAGMA temp_store = MEMORY;
-      `);
-      console.log('Hello, CodeInfinity Test 2!');
-      this.setupDatabase();
+  public async initialize(): Promise<void> {
+    this.db = await new Promise((resolve, reject) => {
+      const db = new pkg.Database('CodeInfinity_Test2.db', (err) => {
+        if (err) return reject(err);
+        resolve(db);
+      });
     });
-  }
 
-  private setupDatabase() {
-    const createTable = `
+    await this.execAsync(`
+      PRAGMA journal_mode = OFF;
+      PRAGMA synchronous = OFF;
+      PRAGMA cache_size = 1000000;
+      PRAGMA locking_mode = EXCLUSIVE;
+      PRAGMA temp_store = MEMORY;
+    `);
+
+    await this.execAsync(`
       CREATE TABLE IF NOT EXISTS csv_import (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -35,23 +31,20 @@ export class SQLiteDatabase {
         dateofbirth TEXT NOT NULL,
         UNIQUE(name, surname, dateofbirth)
       );
-    `;
+    `);
 
-    this.db.exec(createTable, (err) => {
-      if (err) {
-        console.error('Table creation failed:', err);
-        return;
-      }
+    await this.execAsync('BEGIN TRANSACTION;');
 
-      // Begin transaction once
-      this.db.exec('BEGIN TRANSACTION;');
+    this.insertStmt = this.db.prepare(
+      'INSERT INTO csv_import (name, surname, initials, age, dateofbirth) VALUES (?, ?, ?, ?, ?)'
+    );
 
-      const stmt = this.db.prepare(
-        'INSERT INTO csv_import (name, surname, initials, age, dateofbirth) VALUES (?, ?, ?, ?, ?)'
-      );
+    console.log('SQLite initialized and transaction started.');
+  }
 
-      stmt.run = stmt.run.bind(stmt); // ensure correct this
-      this.insertStmt = stmt;
+  private execAsync(sql: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.exec(sql, (err) => (err ? reject(err) : resolve()));
     });
   }
 
@@ -61,14 +54,15 @@ export class SQLiteDatabase {
     initials: string,
     age: number,
     dateofbirth: string
-  ) {
+  ): void {
     if (!this.insertStmt) {
-      console.warn('DB not ready yet');
+      console.warn('Insert attempted before statement ready.');
       return;
     }
+
     this.insertStmt.run(name, surname, initials, age, dateofbirth, (err: any) => {
       if (err) {
-        // console.error('Insert failed:', err);
+        // optionally handle unique constraint violation silently
       } else {
         this.insertedCount++;
       }
@@ -77,17 +71,20 @@ export class SQLiteDatabase {
 
   public async CommitAndClose(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.insertStmt?.finalize();
-      this.db.exec('COMMIT;', (err) => {
+      if (!this.insertStmt) return resolve();
+
+      this.insertStmt.finalize((err) => {
         if (err) return reject(err);
-        // Get real row count
-        
 
-        console.log(`${this.insertedCount.toLocaleString()} rows inserted at warp speed!`);
-
-        this.db.close((err) => {
+        this.db.exec('COMMIT;', (err) => {
           if (err) return reject(err);
-          resolve();
+
+          console.log(`${this.insertedCount.toLocaleString()} rows inserted!`);
+
+          this.db.close((err) => {
+            if (err) return reject(err);
+            resolve();
+          });
         });
       });
     });
