@@ -3,13 +3,22 @@ import pkg from 'sqlite3';
 export class SQLiteDatabase {
   private db: pkg.Database;
   private insertStmt?: pkg.Statement;
+  private insertedCount = 0;
 
   constructor() {
     this.db = new pkg.Database('CodeInfinity_Test2.db', (err) => {
       if (err) {
         console.error('DB open error:', err);
-        process.exit(1);
+        throw err;
       }
+      // MAX SPEED SETTINGS
+      this.db.exec(`
+        PRAGMA journal_mode = OFF;
+        PRAGMA synchronous = OFF;
+        PRAGMA cache_size = 1000000;
+        PRAGMA locking_mode = EXCLUSIVE;
+        PRAGMA temp_store = MEMORY;
+      `);
       console.log('Hello, CodeInfinity Test 2!');
       this.setupDatabase();
     });
@@ -34,6 +43,9 @@ export class SQLiteDatabase {
         return;
       }
 
+      // Begin transaction once
+      this.db.exec('BEGIN TRANSACTION;');
+
       const stmt = this.db.prepare(
         'INSERT INTO csv_import (name, surname, initials, age, dateofbirth) VALUES (?, ?, ?, ?, ?)'
       );
@@ -55,14 +67,29 @@ export class SQLiteDatabase {
       return;
     }
     this.insertStmt.run(name, surname, initials, age, dateofbirth, (err: any) => {
-      if (err) console.error('Insert failed:', err);
+      if (err) {
+        // console.error('Insert failed:', err);
+      } else {
+        this.insertedCount++;
+      }
     });
   }
 
-  public close() {
-    this.insertStmt?.finalize();
-    this.db.close((err) => {
-      if (err) console.error('Close error:', err);
+  public async CommitAndClose(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.insertStmt?.finalize();
+      this.db.exec('COMMIT;', (err) => {
+        if (err) return reject(err);
+        // Get real row count
+        
+
+        console.log(`${this.insertedCount.toLocaleString()} rows inserted at warp speed!`);
+
+        this.db.close((err) => {
+          if (err) return reject(err);
+          resolve();
+        });
+      });
     });
   }
 }

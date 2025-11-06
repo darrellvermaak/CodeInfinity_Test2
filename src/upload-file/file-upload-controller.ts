@@ -12,7 +12,7 @@ export class FileUploadController {
     private importUploadedCSVData: ImportUploadedCSVData = new ImportUploadedCSVData()
   ) {}
 
-  public SaveFile(chunks: Buffer[], contentType: string): string {
+  public async SaveFile(chunks: Buffer[], contentType: string): Promise<string> {
     const boundaryBuffer = this.getBoundaryBuffer(contentType);
     const body = Buffer.concat(chunks);
     const bodyParts: Buffer[] = this.makeParts(body, boundaryBuffer);
@@ -20,7 +20,7 @@ export class FileUploadController {
     const { filename, fileData } = this.parseBodyParts(bodyParts);
 
     const filepath = this.writeFileToUploads(filename, fileData);
-    this.importUploadedCSVData.ImportCSVData(filepath);
+    await this.importUploadedCSVData.ImportCSVData(filepath);
 
     return filename;
   }
