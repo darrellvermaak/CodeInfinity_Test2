@@ -1,6 +1,5 @@
 import { CSVGenerator } from './generate-csv.js';
 
-// DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
   const GENERATE_BTN = document.getElementById('generateBtn');
   const STATUS = document.getElementById('status');
@@ -20,13 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let raw = INPUT.value.trim();
     let val = parseInt(raw, 10);
 
-    // ----  ENFORCE MAX 5,000,000  ----
     if (isNaN(val) || val < 1) {
       GENERATE_BTN.disabled = true;
       GENERATE_BTN.textContent = 'Enter a number ≥ 1';
       return;
     }
 
+    // ----  ENFORCE MAX 5,000,000  ----
     if (val > 5_000_000) {
       val = 5_000_000;
       INPUT.value = val.toString();
@@ -40,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   INPUT.addEventListener('input', UPDATE_BUTTON);
-  UPDATE_BUTTON(); // Initial
+  UPDATE_BUTTON(); // Initialise
 
   FILE_INPUT.addEventListener('change', () => {
     FILE_NAME_SPAN.textContent = FILE_INPUT.files[0]?.name || 'Choose CSV file...';
@@ -63,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     GENERATE_BTN.disabled = false;
 
-    // Auto-clear after 4 seconds
     STATUS.textContent = '';
     STATUS.style.color = '';
 
@@ -76,32 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       WORKER.postMessage({ count: quantityToGenerate })
-      // const CSV = GENERATOR.generateCSV(quantityToGenerate);
-
-      // const SAVED = await GENERATOR.saveWithPicker(CSV);
-      // console.log('Saved with picker:', SAVED);
-
-      // if (SAVED) {
-      //   STATUS.textContent = 'File saved!';
-      //   STATUS.style.color = '#27ae60';
-      // } else {
-      //   GENERATOR.downloadCSV(CSV);
-      //   STATUS.textContent = 'Download started!';
-      //   STATUS.style.color = '#3498db';
-      // }
-
-      // // Auto-clear after 4 seconds
-      // setTimeout(() => {
-      //   STATUS.textContent = '';
-      //   STATUS.style.color = '';
-      // }, 4000);
 
     } catch (err) {
       console.error('Generation error:', err);
       STATUS.textContent = 'Error generating file';
       STATUS.style.color = '#e74c3c';
-    } finally {
-      // GENERATE_BTN.disabled = false;
     }
   });
 

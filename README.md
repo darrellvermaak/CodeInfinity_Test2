@@ -3,4 +3,5 @@ Code Infinity Test 2
 
 main branch is main
 
+npm i
 npm run startx

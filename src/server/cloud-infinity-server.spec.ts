@@ -25,10 +25,8 @@ describe("ImportUploadedCSVData", () => {
   it("should import valid rows from CSV and skip invalid ones", async () => {
     const importer = new ImportUploadedCSVData();
 
-    // This awaits initialize() + streaming + CommitAndClose()
     await importer.ImportCSVData(TEST_CSV_PATH);
 
-    // NOW the DB is fully committed and closed → safe to reopen
     const verifier = new SQLiteDatabase();
     await verifier.initialize();
 

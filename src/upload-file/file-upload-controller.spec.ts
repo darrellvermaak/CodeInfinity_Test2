@@ -43,17 +43,13 @@ describe("FileUploadController", () => {
 
     const filename = await controller.SaveFile(chunks, contentType);
 
-    // 1️⃣ Filename should be returned
     expect(filename).toBe(testFileName);
 
-    // 2️⃣ File should exist in uploads folder
     expect(fs.existsSync(testFilePath)).toBe(true);
 
-    // 3️⃣ Contents should match
     const written = fs.readFileSync(testFilePath, "utf8");
     expect(written).toContain("Alice,Smith");
 
-    // 4️⃣ ImportCSVData should have been called
     expect(mockImporter.ImportCSVData).toHaveBeenCalledTimes(1);
     expect(mockImporter.ImportCSVData).toHaveBeenCalledWith(expect.stringContaining(testFileName));
   });

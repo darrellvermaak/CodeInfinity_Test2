@@ -23,7 +23,7 @@ describe("ImportUploadedCSVData", () => {
 
   it("should import valid rows and skip invalid ones", async () => {
     const importer = new ImportUploadedCSVData();
-    await importer.ImportCSVData(TEST_CSV_PATH); // fully awaited
+    await importer.ImportCSVData(TEST_CSV_PATH);
 
     // DB is now closed and flushed — safe to reopen
     const db = new SQLiteDatabase();
