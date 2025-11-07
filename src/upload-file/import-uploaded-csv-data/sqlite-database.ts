@@ -62,7 +62,7 @@ export class SQLiteDatabase {
 
     this.insertStmt.run(name, surname, initials, age, dateofbirth, (err: any) => {
       if (err) {
-        // optionally handle unique constraint violation silently
+        // can log unique constraint violations
       } else {
         this.insertedCount++;
       }

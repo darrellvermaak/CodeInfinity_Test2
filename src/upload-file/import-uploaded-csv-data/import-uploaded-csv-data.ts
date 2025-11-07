@@ -11,7 +11,7 @@ export class ImportUploadedCSVData {
 
   public async ImportCSVData(filepath: string): Promise<void> {
     const start = Date.now();
-    await this.sqliteDatabase.initialize(); // 🔑 wait until DB ready
+    await this.sqliteDatabase.initialize();
     let count = 0;
 
     await new Promise<void>((resolve, reject) => {

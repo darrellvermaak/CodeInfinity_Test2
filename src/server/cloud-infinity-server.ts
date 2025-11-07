@@ -34,7 +34,6 @@ export class CloudInfinityServer {
 
   public StartServer(): void {
     const server = createServer((req: IncomingMessage, res: ServerResponse) => {
-      // Add this inside createServer callback, after static file logic
       if (req.method === "POST" && req.url === "/submit") {
         this.fileUploadHandler.HandleUpload(req, res);
         return;
@@ -73,7 +72,6 @@ export class CloudInfinityServer {
       return;
     }
 
-    // Serve the file
     this.sendFile(res, filePath, ext);
   }
 
@@ -101,7 +99,7 @@ export class CloudInfinityServer {
       res.writeHead(200, {
         "Content-Type": MIME_TYPES[ext] || "application/octet-stream",
         "Content-Length": stats.size,
-        // 'Cache-Control': 'public, max-age=31536000',  // Optional: enable caching for static assets - disabled for development
+        // 'Cache-Control': 'public, max-age=31536000',  // enable caching for static assets - disabled for development
       });
 
       stream.pipe(res);

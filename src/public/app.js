@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (val > 5_000_000) {
-      // Auto-clamp and show a hint
       val = 5_000_000;
       INPUT.value = val.toString();
       STATUS.textContent = 'Maximum allowed: 5,000,000 rows';
@@ -130,40 +129,35 @@ document.addEventListener('DOMContentLoaded', () => {
   INPUT.addEventListener('input', UPDATE_BUTTON);
   UPDATE_BUTTON(); // Initial
 
-  // File input display
   FILE_INPUT.addEventListener('change', () => {
     FILE_NAME_SPAN.textContent = FILE_INPUT.files[0]?.name || 'Choose CSV file...';
   });
 
-  // Generate CSV - FIXED VERSION
-GENERATE_BTN.addEventListener('click', async () => {
-  GENERATE_BTN.disabled = true;
-  STATUS.textContent = `Generating ${quantityToGenerate.toLocaleString()} rows...`;
-  STATUS.style.color = '#e67e22';
+  GENERATE_BTN.addEventListener('click', async () => {
+    GENERATE_BTN.disabled = true;
+    STATUS.textContent = `Generating ${quantityToGenerate.toLocaleString()} rows...`;
+    STATUS.style.color = '#e67e22';
 
-  try {
-    // Run generation off the main thread? Use a Worker.
-    // But for now: just generate synchronously (it's fast enough for 1M)
-    const CSV = GENERATOR.generateCSV(quantityToGenerate);
+    try {
+      const CSV = GENERATOR.generateCSV(quantityToGenerate);
 
-    // This now runs in the correct call stack
-    const SAVED = await GENERATOR.saveWithPicker(CSV);
-    console.log('Saved with picker:', SAVED);
+      const SAVED = await GENERATOR.saveWithPicker(CSV);
+      console.log('Saved with picker:', SAVED);
 
-    if (SAVED) {
-      STATUS.textContent = 'File saved!';
-      STATUS.style.color = '#27ae60';
-    } else {
-      GENERATOR.downloadCSV(CSV);
-      STATUS.textContent = 'Download started!';
-      STATUS.style.color = '#3498db';
-    }
+      if (SAVED) {
+        STATUS.textContent = 'File saved!';
+        STATUS.style.color = '#27ae60';
+      } else {
+        GENERATOR.downloadCSV(CSV);
+        STATUS.textContent = 'Download started!';
+        STATUS.style.color = '#3498db';
+      }
 
-    // Auto-clear after 4 seconds
-    setTimeout(() => {
-      STATUS.textContent = '';
-      STATUS.style.color = '';
-    }, 4000);
+      // Auto-clear after 4 seconds
+      setTimeout(() => {
+        STATUS.textContent = '';
+        STATUS.style.color = '';
+      }, 4000);
 
     } catch (err) {
       console.error('Generation error:', err);
