@@ -13,7 +13,7 @@ export class FileUploadHandler {
       try {
         const contentType = this.getValidContentType(req);
 
-        const filename = this.fileUploadController.SaveFile(chunks, contentType)
+        const filename = await this.fileUploadController.SaveFile(chunks, contentType)
 
         res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
         res.end(`File "${filename}" uploaded successfully.`);
